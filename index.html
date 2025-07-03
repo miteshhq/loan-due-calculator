@@ -1,119 +1,332 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Loan EMI & Amortization Calculator</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 </head>
-<body class="bg-emerald-50 min-h-screen flex items-center justify-center p-4">
-  <div class="w-full max-w-6xl bg-white shadow-2xl rounded-2xl overflow-hidden">
-    <header class="bg-emerald-600 text-white p-6">
-      <h1 class="text-4xl font-extrabold">Loan EMI & Amortization Calculator</h1>
-      <p class="mt-2 text-emerald-200">Enter your loan details and compare repayment plans.</p>
+<body class="bg-emerald-50 min-h-screen p-4">
+  <div class="max-w-7xl mx-auto bg-white shadow-xl rounded-xl overflow-hidden">
+    <!-- Header -->
+    <header class="bg-emerald-600 text-white p-4">
+      <h1 class="text-2xl font-bold">Loan EMI & Amortization Calculator</h1>
+      <p class="text-emerald-200 text-sm">Enter your loan details and compare repayment plans</p>
     </header>
-    <main class="p-8 grid grid-cols-1 lg:grid-cols-4 gap-8">
-      <!-- Form -->
-      <section class="lg:col-span-1 space-y-6">
-        <div>
-          <label for="principal" class="block text-sm font-medium text-gray-700">Loan Amount (₹)</label>
-          <input id="principal" type="number" value="1000000" class="mt-2 block w-full rounded-lg border border-gray-300 shadow-sm focus:ring-emerald-500 focus:border-emerald-500 p-3" />
+
+    <!-- Main Content -->
+    <main class="p-4 grid grid-cols-1 lg:grid-cols-5 gap-4">
+      <!-- Controls Section -->
+      <section class="lg:col-span-2 space-y-4">
+        <!-- Input Controls -->
+        <div class="space-y-3">
+          <div>
+            <label for="principal" class="block text-xs font-medium text-gray-700 mb-1">
+              Loan Amount (₹)
+            </label>
+            <input id="principal" type="number" value="1000000" min="0" step="1000"
+                   class="w-full p-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" />
+          </div>
+
+          <div>
+            <label for="rate" class="block text-xs font-medium text-gray-700 mb-1">
+              Annual Interest Rate (%)
+            </label>
+            <input id="rate" type="number" value="15" min="0" max="30" step="0.1"
+                   class="w-full p-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" />
+          </div>
+
+          <div>
+            <label for="emis" class="block text-xs font-medium text-gray-700 mb-1">
+              Monthly EMIs (₹, space or comma separated)
+            </label>
+            <input id="emis" type="text" value="1000, 2000, 5000, 7500, 10000"
+                   class="w-full p-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" />
+          </div>
         </div>
-        <div>
-          <label for="rate" class="block text-sm font-medium text-gray-700">Annual Interest Rate (%)</label>
-          <input id="rate" type="number" step="0.01" value="15" class="mt-2 block w-full rounded-lg border border-gray-300 shadow-sm focus:ring-emerald-500 focus:border-emerald-500 p-3" />
+
+        <!-- Calculate Button -->
+        <button id="calculateBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 px-4 rounded-md transition-colors">
+          Calculate
+        </button>
+
+        <!-- Minimum EMI Note -->
+        <div id="minEmiNote" class="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+          <p class="text-sm text-yellow-800 font-medium"></p>
         </div>
-        <div>
-          <label for="emis" class="block text-sm font-medium text-gray-700">Monthly EMIs (₹, space or comma separated)</label>
-          <input id="emis" type="text" value="1000, 2000, 5000, 7500, 10000" class="mt-2 block w-full rounded-lg border border-gray-300 shadow-sm focus:ring-emerald-500 focus:border-emerald-500 p-3" />
-        </div>
-        <p id="minEmiNote" class="text-sm font-medium text-yellow-600"></p>
-        <button id="calculateBtn" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-3 rounded-lg shadow">Calculate</button>
       </section>
-      <!-- Results -->
+
+      <!-- Results Section -->
       <section class="lg:col-span-3">
-        <div class="border-b border-gray-200">
-          <nav class="flex -mb-px" id="tabs">
-            <button data-tab="table" class="tab-btn py-4 px-6 text-lg font-semibold text-emerald-600 border-b-2 border-emerald-600">Table</button>
-            <button data-tab="chart" class="tab-btn py-4 px-6 text-lg font-semibold text-gray-500 hover:text-emerald-600 border-b-2 border-transparent">Chart</button>
+        <!-- Tab Navigation -->
+        <div class="border-b border-gray-200 mb-4">
+          <nav class="flex space-x-6">
+            <button data-tab="table" class="tab-btn py-2 px-1 text-sm font-medium text-emerald-600 border-b-2 border-emerald-600">
+              Table View
+            </button>
+            <button data-tab="chart" class="tab-btn py-2 px-1 text-sm font-medium text-gray-500 border-b-2 border-transparent hover:text-emerald-600">
+              Chart View
+            </button>
           </nav>
         </div>
-        <div id="tab-content" class="pt-6">
-          <!-- Table -->
+
+        <!-- Tab Content -->
+        <div id="tab-content">
+          <!-- Table Tab -->
           <div id="table" class="tab-panel">
-            <div class="overflow-x-auto">
-              <table class="min-w-full bg-white rounded-lg shadow-lg">
-                <thead class="bg-emerald-100">
+            <div class="overflow-x-auto bg-white rounded-lg border border-gray-200 max-h-96">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-emerald-50 sticky top-0">
                   <tr>
-                    <th class="px-6 py-3 text-left text-sm font-bold text-gray-700">EMI (₹)</th>
-                    <th class="px-6 py-3 text-left text-sm font-bold text-gray-700">Months</th>
-                    <th class="px-6 py-3 text-left text-sm font-bold text-gray-700">Years</th>
+                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">EMI Amount</th>
+                    <th class="px-3 py-2 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Months</th>
+                    <th class="px-3 py-2 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Years</th>
+                    <th class="px-3 py-2 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Total Interest</th>
+                    <th class="px-3 py-2 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Total Amount</th>
                   </tr>
                 </thead>
-                <tbody id="results" class="divide-y divide-gray-200"></tbody>
+                <tbody id="results" class="bg-white divide-y divide-gray-200">
+                </tbody>
               </table>
             </div>
           </div>
-          <!-- Chart -->
+
+          <!-- Chart Tab -->
           <div id="chart" class="tab-panel hidden">
-            <div class="bg-white p-6 rounded-lg shadow-lg">
-              <canvas id="emiChart"></canvas>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="bg-white p-3 rounded-lg border border-gray-200">
+                <h3 class="text-sm font-medium text-gray-700 mb-2">EMI vs Repayment Period</h3>
+                <div class="relative h-64">
+                  <canvas id="emiChart"></canvas>
+                </div>
+              </div>
+              <div class="bg-white p-3 rounded-lg border border-gray-200">
+                <h3 class="text-sm font-medium text-gray-700 mb-2">Total Interest Comparison</h3>
+                <div class="relative h-64">
+                  <canvas id="interestChart"></canvas>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
     </main>
-  </div>  <script>
-    // Tab switch
-    const tabs = document.querySelectorAll('.tab-btn');
-    const panels = document.querySelectorAll('.tab-panel');
-    tabs.forEach(btn => btn.addEventListener('click', () => {
-      tabs.forEach(b => {
-        b.classList.remove('border-emerald-600','text-emerald-600');
-        b.classList.add('border-transparent','text-gray-500');
-      });
-      btn.classList.add('border-emerald-600','text-emerald-600');
-      btn.classList.remove('border-transparent','text-gray-500');
-      panels.forEach(p => p.classList.add('hidden'));
-      document.getElementById(btn.dataset.tab).classList.remove('hidden');
-    }));
+  </div>
 
+  <script>
+    // DOM elements
+    const principalInput = document.getElementById('principal');
+    const rateInput = document.getElementById('rate');
+    const emisInput = document.getElementById('emis');
+    const calculateBtn = document.getElementById('calculateBtn');
+    const minEmiNote = document.getElementById('minEmiNote');
+    const resultsBody = document.getElementById('results');
+    
+    let emiChart, interestChart;
+
+    // Initialize charts
+    function initCharts() {
+      const emiCtx = document.getElementById('emiChart').getContext('2d');
+      emiChart = new Chart(emiCtx, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [{
+            label: 'Months to Repay',
+            data: [],
+            fill: false,
+            tension: 0.3,
+            borderColor: 'rgba(5, 150, 105, 0.8)',
+            pointBackgroundColor: 'rgba(5, 150, 105, 1)',
+            pointBorderColor: 'rgba(5, 150, 105, 1)',
+            pointRadius: 5,
+            pointHoverRadius: 7
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: 'Months'
+              }
+            },
+            x: {
+              title: {
+                display: true,
+                text: 'EMI Amount'
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top'
+            }
+          }
+        }
+      });
+
+      const interestCtx = document.getElementById('interestChart').getContext('2d');
+      interestChart = new Chart(interestCtx, {
+        type: 'bar',
+        data: {
+          labels: [],
+          datasets: [{
+            label: 'Total Interest',
+            data: [],
+            backgroundColor: 'rgba(245, 158, 11, 0.8)',
+            borderColor: 'rgba(245, 158, 11, 1)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: 'Amount (₹)'
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top'
+            }
+          }
+        }
+      });
+    }
+
+    // Tab functionality
+    function initTabs() {
+      const tabBtns = document.querySelectorAll('.tab-btn');
+      const tabPanels = document.querySelectorAll('.tab-panel');
+      
+      tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const targetTab = btn.dataset.tab;
+          
+          // Update button styles
+          tabBtns.forEach(b => {
+            b.className = 'tab-btn py-2 px-1 text-sm font-medium text-gray-500 border-b-2 border-transparent hover:text-emerald-600';
+          });
+          btn.className = 'tab-btn py-2 px-1 text-sm font-medium text-emerald-600 border-b-2 border-emerald-600';
+          
+          // Show/hide panels
+          tabPanels.forEach(panel => {
+            panel.classList.add('hidden');
+          });
+          document.getElementById(targetTab).classList.remove('hidden');
+        });
+      });
+    }
+
+    // Calculate months to repay
     function calculateMonths(P, annualR, emi) {
-      const r = annualR/12/100;
-      if (emi <= P*r) return Infinity;
-      const n = Math.log(emi/(emi - P*r)) / Math.log(1 + r);
+      const r = annualR / 12 / 100;
+      if (emi <= P * r) return Infinity;
+      const n = Math.log(emi / (emi - P * r)) / Math.log(1 + r);
       return Math.ceil(n);
     }
 
-    let chartInstance;
-    document.getElementById('calculateBtn').addEventListener('click', () => {
-      const P = parseFloat(document.getElementById('principal').value);
-      const annualR = parseFloat(document.getElementById('rate').value);
-      const minEmi = Math.ceil(P * (annualR/12/100));
-      document.getElementById('minEmiNote').textContent = `Minimum EMI to start reducing principal: ₹${minEmi.toLocaleString()}`;
+    // Calculate total interest
+    function calculateTotalInterest(P, months, emi) {
+      if (months === Infinity) return Infinity;
+      return (emi * months) - P;
+    }
 
-      const emiList = document.getElementById('emis').value.split(/[,\s]+/).map(e=>parseFloat(e)).filter(e=>!isNaN(e));
-      const tbody = document.getElementById('results'); tbody.innerHTML = '';
-      const labels = [], data = [];
-      emiList.forEach(emi=>{
+    // Update charts
+    function updateCharts(labels, monthsData, interestData) {
+      if (emiChart) {
+        emiChart.data.labels = labels;
+        emiChart.data.datasets[0].data = monthsData;
+        emiChart.update('none');
+      }
+
+      if (interestChart) {
+        interestChart.data.labels = labels;
+        interestChart.data.datasets[0].data = interestData;
+        interestChart.update('none');
+      }
+    }
+
+    // Main calculation function
+    function calculate() {
+      const P = parseFloat(principalInput.value);
+      const annualR = parseFloat(rateInput.value);
+      
+      if (isNaN(P) || isNaN(annualR) || P <= 0 || annualR < 0) {
+        alert('Please enter valid loan amount and interest rate');
+        return;
+      }
+
+      const minEmi = Math.ceil(P * (annualR / 12 / 100));
+      minEmiNote.querySelector('p').textContent = `Minimum EMI to start reducing principal: ₹${minEmi.toLocaleString('en-IN')}`;
+
+      const emiList = emisInput.value
+        .split(/[,\s]+/)
+        .map(e => parseFloat(e))
+        .filter(e => !isNaN(e) && e > 0);
+
+      if (emiList.length === 0) {
+        alert('Please enter valid EMI amounts');
+        return;
+      }
+
+      // Clear previous results
+      resultsBody.innerHTML = '';
+      
+      const labels = [];
+      const monthsData = [];
+      const interestData = [];
+
+      emiList.forEach(emi => {
         const months = calculateMonths(P, annualR, emi);
-        const years = months===Infinity?'∞':(months/12).toFixed(2);
-        const mDisp = months===Infinity?'∞':months;
-        const row = `<tr class="hover:bg-emerald-50"><td class="px-6 py-4 text-gray-700">₹${emi.toLocaleString()}</td><td class="px-6 py-4 text-gray-700">${mDisp}</td><td class="px-6 py-4 text-gray-700">${years}</td></tr>`;
-        tbody.insertAdjacentHTML('beforeend', row);
-        labels.push(`₹${emi.toLocaleString()}`);
-        data.push(months===Infinity?null:months);
+        const years = months === Infinity ? '∞' : (months / 12).toFixed(2);
+        const monthsDisplay = months === Infinity ? '∞' : months;
+        const totalInterest = calculateTotalInterest(P, months, emi);
+        const totalAmount = totalInterest === Infinity ? '∞' : P + totalInterest;
+
+        // Add to table
+        const row = resultsBody.insertRow();
+        row.className = 'hover:bg-emerald-50';
+        
+        row.innerHTML = `
+          <td class="px-3 py-2 text-sm text-gray-900">₹${emi.toLocaleString('en-IN')}</td>
+          <td class="px-3 py-2 text-sm text-gray-900 text-right">${monthsDisplay}</td>
+          <td class="px-3 py-2 text-sm text-gray-900 text-right">${years}</td>
+          <td class="px-3 py-2 text-sm text-gray-900 text-right">${totalInterest === Infinity ? '∞' : '₹' + Math.floor(totalInterest).toLocaleString('en-IN')}</td>
+          <td class="px-3 py-2 text-sm text-gray-900 text-right">${totalAmount === Infinity ? '∞' : '₹' + Math.floor(totalAmount).toLocaleString('en-IN')}</td>
+        `;
+
+        // Add to chart data
+        labels.push(`₹${emi.toLocaleString('en-IN')}`);
+        monthsData.push(months === Infinity ? null : months);
+        interestData.push(totalInterest === Infinity ? null : totalInterest);
       });
 
-      const ctx = document.getElementById('emiChart').getContext('2d');
-      if (chartInstance) chartInstance.destroy();
-      chartInstance = new Chart(ctx, {
-        type:'line', data:{ labels, datasets:[{ label:'Months to Repay', data, fill:false, tension:0.3, borderColor:'rgba(16,185,129,0.8)', pointBackgroundColor:'rgba(16,185,129,1)' }] },
-        options:{ responsive:true, scales:{ y:{ beginAtZero:true, title:{ display:true, text:'Months' } } } }
-      });
+      // Update charts
+      updateCharts(labels, monthsData, interestData);
+    }
+
+    // Event listeners
+    calculateBtn.addEventListener('click', calculate);
+
+    // Initialize everything
+    document.addEventListener('DOMContentLoaded', () => {
+      initCharts();
+      initTabs();
+      calculate(); // Initial calculation
     });
-
-    // Default view
-    tabs[0].click();
-  </script></body>
+  </script>
+</body>
 </html>
