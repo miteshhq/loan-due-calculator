@@ -1,0 +1,112 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Loan Calculator & Debt Amortization</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+  <div class="bg-white shadow-xl rounded-2xl p-6 w-full max-w-4xl">
+    <h1 class="text-2xl font-semibold mb-4">Loan Amortization & EMI Analysis</h1>
+    <!-- Input Form -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Loan Amount (₹)</label>
+        <input id="principal" type="number" value="1000000" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Annual Interest Rate (%)</label>
+        <input id="rate" type="number" step="0.01" value="15" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Monthly EMIs (comma-separated ₹)</label>
+        <input id="emis" type="text" value="1000,2000,5000,7500,10000" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2" />
+      </div>
+    </div>
+    <button id="calculateBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg shadow hover:bg-indigo-700 mb-6">Calculate</button><!-- Tabs -->
+<div>
+  <nav class="flex space-x-4 mb-4" id="tabs">
+    <button data-tab="table" class="tab-btn px-3 py-1 rounded-lg bg-indigo-100 text-indigo-700">Table</button>
+    <button data-tab="chart" class="tab-btn px-3 py-1 rounded-lg text-gray-600 hover:bg-gray-100">Chart</button>
+  </nav>
+  <div id="tab-content">
+    <!-- Table -->
+    <div id="table" class="tab-panel">
+      <div class="overflow-x-auto">
+        <table class="min-w-full bg-white rounded-lg shadow">
+          <thead>
+            <tr class="bg-indigo-600 text-white">
+              <th class="px-4 py-2">EMI (₹)</th>
+              <th class="px-4 py-2">Months to Repay</th>
+              <th class="px-4 py-2">Years</th>
+            </tr>
+          </thead>
+          <tbody id="results"></tbody>
+        </table>
+      </div>
+    </div>
+    <!-- Chart -->
+    <div id="chart" class="tab-panel hidden">
+      <canvas id="emiChart"></canvas>
+    </div>
+  </div>
+</div>
+
+  </div>  <script>
+    // Tab switching
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.replace('bg-indigo-100', ''));        document.querySelectorAll('.tab-btn').forEach(b => b.classList.replace('text-indigo-700', 'text-gray-600'));        btn.classList.add('bg-indigo-100', 'text-indigo-700');
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+        document.getElementById(btn.dataset.tab).classList.remove('hidden');
+      });
+    });
+
+    function calculateMonths(P, annualR, emi) {
+      const r = annualR / 12 / 100;
+      if (emi <= P * r) return Infinity;
+      const n = Math.log(emi / (emi - P * r)) / Math.log(1 + r);
+      return Math.ceil(n);
+    }
+
+    let chart;
+    document.getElementById('calculateBtn').addEventListener('click', () => {
+      const P = parseFloat(document.getElementById('principal').value);
+      const annualR = parseFloat(document.getElementById('rate').value);
+      const emiList = document.getElementById('emis').value.split(',').map(e => parseFloat(e.trim())).filter(Boolean);
+
+      // Table
+      const tbody = document.getElementById('results');
+      tbody.innerHTML = '';
+      const labels = [];
+      const data = [];
+
+      emiList.forEach(emi => {
+        const months = calculateMonths(P, annualR, emi);
+        const years = months === Infinity ? '∞' : (months / 12).toFixed(2);
+        const mDisp = months === Infinity ? '∞' : months;
+        const row = `<tr><td class="border px-4 py-2">${emi}</td><td class="border px-4 py-2">${mDisp}</td><td class="border px-4 py-2">${years}</td></tr>`;
+        tbody.insertAdjacentHTML('beforeend', row);
+        labels.push(emi);
+        data.push(months === Infinity ? null : months);
+      });
+
+      // Chart
+      if (chart) chart.destroy();
+      const ctx = document.getElementById('emiChart').getContext('2d');
+      chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{ label: 'Months to Repay', data }]
+        },
+        options: {
+          scales: { y: { beginAtZero: true } }
+        }
+      });
+    });
+  </script></body>
+</html>
